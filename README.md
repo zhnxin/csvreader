@@ -1,6 +1,8 @@
 # csvreader
 csv reader is a simple decoder for decoding csv file to struct
 
+[README_ZH_cn.adoc](.README_ZH_cn.adoc)
+
 # todo
 
 - [x] Custom parster
