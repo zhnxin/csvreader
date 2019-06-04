@@ -1,0 +1,104 @@
+= csvreader
+Zhengxin <zhngxin@aliyun.com>
+简单的csv格式文件解析到`struct`工具
+
+== install
+====
+go get github.com/zhnxin/csvreader
+====
+== usage
+
+=== 简单用法
+
+NOTE: 默认情况下，*csv* 文件的首行会被当作header处理。
+
+[source,csv]
+.file.csv
+----
+hosname,ip
+redis,172.17.0.2
+mariadb,172.17.0.3
+----
+
+
+[[app-listing]]
+[source,go]
+.go
+----
+type Info struct{
+    Hostname string
+    IP string
+}
+
+//struct slice
+infos := []Info{}
+_ = csvreader.New().UnMarshalFile("file.csv",&infos)
+body,_ := json.Marshal(infos)
+fmt.Println(string(body))
+
+//point slice
+infos = []*Info{}
+_ = csvreader.New().UnMarshalFile("file.csv",&infos)
+body,_ := json.Marshal(infos)
+fmt.Println(string(body))
+----
+
+NOTE: 如果 *csv* 文件首行不包含header，可以使用 *WithHeader([]string)* 来指定header。
+
+[source,go]
+----
+_ = csvreader.New().WithHeader([]string{"hostname","ip"}).UnMarshalFile("file.csv",&infos)
+----
+
+=== 自定义parster
+
+就像枚举类型(enum),偶尔会遇到这种需要实现自定义转换过程的情况。例子如下
+
+[source,go]
+----
+type NetProtocol uint32
+const(
+    NetProtocol_TCP NetProtocol = iota
+    NetProtocol_UDP
+    NetProtocol_DCCP
+    NetProtocol_SCTP
+)
+
+type ServiceInfo struct{
+    Host string
+    Port string
+    Protocol NetProtocol
+}
+----
+
+直接使用原始的类型来编辑csv文件，十分不便。这时就需要实现自定义parser。
+
+[TIP]
+====
+----
+type CsvMarshal interface {
+    FromString(string) error
+}
+----
+====
+
+[source,go]
+----
+func (p *NetProtocol)FromString(protocol string) error{
+    switch strings.ToLower(protocol){
+        case "tcp":
+            *p = NetProtocol_TCP
+        case "udp":
+            *p = NetProtocol_UDP
+        case "dccp":
+            *p = NetProtocol_DCCP
+        case "sctp":
+            *p = NetProtocol_SCTP
+        default:
+            return fmt.Errorf("unknown protocoal:%s",protocol)
+    }
+    return nil
+}
+----
+
+另外一个例子 link:reader_test.go#TestCustom[TestCustom]
