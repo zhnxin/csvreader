@@ -11,7 +11,8 @@ import (
 )
 
 type Decoder struct {
-	header map[string]int
+	header   map[string]int
+	keyCheck []string
 }
 
 type CsvMarshal interface {
@@ -28,6 +29,20 @@ func (d *Decoder) WithHeader(header []string) *Decoder {
 		d.header[h] = i
 	}
 	return d
+}
+
+func (d *Decoder) WithCheck(keys []string) *Decoder {
+	d.keyCheck = keys
+	return d
+}
+
+func (d *Decoder) checkKeys() error {
+	for _, k := range d.keyCheck {
+		if _, ok := d.header[k]; !ok {
+			return fmt.Errorf("lack of key %s", k)
+		}
+	}
+	return nil
 }
 
 func (d *Decoder) UnMarshal(reader *csv.Reader, bean interface{}) error {
@@ -59,6 +74,9 @@ func (d *Decoder) UnMarshal(reader *csv.Reader, bean interface{}) error {
 			return err
 		}
 		d.WithHeader(row)
+	}
+	if err := d.checkKeys(); err != nil {
+		return err
 	}
 	for {
 		row, err := reader.Read()
