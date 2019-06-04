@@ -121,33 +121,38 @@ func (d *Decoder) unMarshal(row []string, beanT reflect.Type) (beanR reflect.Val
 	var fileV reflect.Value
 	var fileT reflect.StructField
 	for i := 0; i < beanV.NumField(); i++ {
-		fileV = beanV.Field(i)
-		fileT, _ = beanT.FieldByName(fileV.Type().Name())
+		fileT = beanT.Field(i)
+		fileV = beanV.FieldByName(fileT.Name)
 		if !fileV.CanSet() {
 			fmt.Println(fileT.Name)
 			continue
 		}
-		if tag := fileT.Tag.Get("csv"); tag != "" {
+		if tag := fileT.Tag.Get("csv"); tag != "" && tag != "-" {
 			index, ok = d.header[tag]
 		} else {
 			index, ok = d.getIndex(fileT.Name)
 		}
 		if ok {
 			value = row[index]
-			fmt.Println(fileT.Name, fileV.Kind())
 			if fileV.Kind() == reflect.Ptr {
 				fileV.Set(reflect.New(fileV.Type().Elem()))
-			} else if m, ok := fileV.Interface().(CsvMarshal); ok {
-				if err = m.FromString(value); err != nil {
-					return
+				continue
+			}
+			if fileV.CanAddr() {
+				ptv := fileV.Addr()
+				if ptv.CanInterface() {
+					if m, ok := ptv.Interface().(CsvMarshal); ok {
+						m.FromString(value)
+						continue
+					}
 				}
 			} else {
-				if err = setField(fileV, value); err != nil {
-					return
-				}
+				fmt.Println("can not addr", fileT.Name)
+			}
+			if err = setField(fileV, value); err != nil {
+				return
 			}
 		}
-
 	}
 	if !isPtr {
 		return beanV, err
@@ -170,5 +175,5 @@ func (d *Decoder) getIndex(name string) (index int, ok bool) {
 			}
 		}
 	}
-	return
+	return index, ok
 }

@@ -3,7 +3,8 @@ csv reader is a simple decoder for decoding csv file to struct
 
 # todo
 
-- [ ] Custom parster
+- [x] Custom parster
+- [ ] pointer attribute
 
 # install
 ```
@@ -46,3 +47,51 @@ If the csv file do not contain headers,you can also set it.
 ```
 _ = csvreader.New().WithHeader([]string{"hostname","ip"}).UnMarshalFile("file.csv",&infos)
 ```
+
+## custom parseter
+
+Just like enum,we need implement our own parster. The example is shown as follows.
+
+```go
+type NetProtocol uint32
+const(
+    NetProtocol_TCP NetProtocol = iota
+    NetProtocol_UDP
+    NetProtocol_DCCP
+    NetProtocol_SCTP
+)
+
+type ServiceInfo struct{
+    Host string
+    Port string
+    Protocol NetProtocol
+}
+```
+
+It's inconvenient to edit a csv file with the custome enum type. It's greate to convert _top_ or _TCP_ to NetProtocol_TCP automatically.Just to implement the _CsvMarshal_ interface
+
+
+    type CsvMarshal interface {
+	    FromString(string) error
+    }
+
+As the case above, the simple solution is this.
+```go
+func (p *NetProtocol)FromString(protocol string) error{
+    switch strings.ToLower(protocol){
+        case "tcp":
+            *p = NetProtocol_TCP
+        case "udp":
+            *p = NetProtocol_UDP
+        case "dccp":
+            *p = NetProtocol_DCCP
+        case "sctp":
+            *p = NetProtocol_SCTP
+        default:
+            return fmt.Errorf("unknown protocoal:%s",protocol)
+    }
+    return nil
+}
+
+```
+There is another exampler you can refer to [TestCustom](./reader_test.go#TestCustom)

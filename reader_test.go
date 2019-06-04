@@ -1,12 +1,13 @@
-package csvreader
+package csvreader_test
 
 import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"testing"
+
+	"github.com/zhnxin/csvreader"
 )
 
 type testStruct struct {
@@ -31,28 +32,10 @@ func (c *CustomeType) FromString(str string) error {
 	return nil
 }
 
-func TestCus(t *testing.T) {
-	var c CustomeType
-	v := reflect.ValueOf(c)
-	if v.CanAddr() {
-		t.Log("yes")
-		if m, ok := v.Addr().Interface().(CsvMarshal); ok {
-			t.Log("ok")
-			m.FromString("udp")
-		}
-	}
-	if m, ok := v.Interface().(CsvMarshal); ok {
-		m.FromString("udp")
-		t.Log(c)
-	} else {
-		t.Log("no")
-	}
-}
-
 func TestSnakeName(t *testing.T) {
 	reader := csv.NewReader(bytes.NewReader([]byte("zhengxin,zhnxin,0,false\nxinzheng,zhnxin,1,true")))
 	bean := []testStruct{}
-	if err := New().WithHeader([]string{"name", "user_name", "id", "enable"}).UnMarshal(reader, &bean); err != nil {
+	if err := csvreader.New().WithHeader([]string{"name", "user_name", "id", "enable"}).UnMarshal(reader, &bean); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := json.Marshal(bean)
@@ -63,7 +46,7 @@ func TestSnakeName(t *testing.T) {
 func TestLowerName(t *testing.T) {
 	reader := csv.NewReader(bytes.NewReader([]byte("zhengxin,zhnxin,0,false\nxinzheng,zhnxin,1,true")))
 	bean := []*testStruct{}
-	if err := New().WithHeader([]string{"NAME", "USERNAME", "ID", "ENABLE"}).UnMarshal(reader, &bean); err != nil {
+	if err := csvreader.New().WithHeader([]string{"NAME", "USERNAME", "ID", "ENABLE"}).UnMarshal(reader, &bean); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := json.Marshal(bean)
@@ -71,9 +54,9 @@ func TestLowerName(t *testing.T) {
 }
 
 func TestCustom(t *testing.T) {
-	reader := csv.NewReader(bytes.NewReader([]byte("zhengxin,zhnxin,udp,false\nxinzheng,zhnxin,udp,true")))
+	reader := csv.NewReader(bytes.NewReader([]byte("zhengxin,zhnxin,udp,false\nxinzheng,zhnxin,tcp,true")))
 	bean := []*testStruct{}
-	if err := New().WithHeader([]string{"NAME", "USERNAME", "type", "ENABLE"}).UnMarshal(reader, &bean); err != nil {
+	if err := csvreader.New().WithHeader([]string{"NAME", "USERNAME", "type", "ENABLE"}).UnMarshal(reader, &bean); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := json.Marshal(bean)
