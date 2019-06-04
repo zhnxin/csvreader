@@ -39,7 +39,6 @@ func TestSnakeName(t *testing.T) {
 		t.Fatal(err)
 	}
 	b, _ := json.Marshal(bean)
-	json.Unmarshal([]byte(""), bean)
 	t.Log(string(b))
 }
 

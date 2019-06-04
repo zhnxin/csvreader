@@ -136,7 +136,7 @@ func (d *Decoder) unMarshal(row []string, beanT reflect.Type) (beanR reflect.Val
 			value = row[index]
 			if fileV.Kind() == reflect.Ptr {
 				fileV.Set(reflect.New(fileV.Type().Elem()))
-				continue
+				fileV = fileV.Elem()
 			}
 			if fileV.CanAddr() {
 				ptv := fileV.Addr()

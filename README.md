@@ -6,7 +6,7 @@ csv reader is a simple decoder for decoding csv file to struct
 # todo
 
 - [x] Custom parster
-- [ ] pointer attribute
+- [x] pointer attribute
 
 # install
 ```
