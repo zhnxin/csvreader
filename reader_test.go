@@ -1,8 +1,6 @@
 package csvreader_test
 
 import (
-	"bytes"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -33,9 +31,11 @@ func (c *CustomeType) FromString(str string) error {
 }
 
 func TestSnakeName(t *testing.T) {
-	reader := csv.NewReader(bytes.NewReader([]byte("zhengxin,zhnxin,0,false\nxinzheng,zhnxin,1,true")))
 	bean := []testStruct{}
-	if err := csvreader.New().WithHeader([]string{"name", "user_name", "id", "enable"}).UnMarshal(reader, &bean); err != nil {
+	if err := csvreader.New().
+		WithHeader([]string{"name", "user_name", "id", "enable"}).
+		UnMarshalBytes([]byte("zhengxin,zhnxin,0,false\nxinzheng,zhnxin,1,true"),
+			&bean); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := json.Marshal(bean)
@@ -43,9 +43,11 @@ func TestSnakeName(t *testing.T) {
 }
 
 func TestLowerName(t *testing.T) {
-	reader := csv.NewReader(bytes.NewReader([]byte("zhengxin,zhnxin,0,false\nxinzheng,zhnxin,1,true")))
 	bean := []*testStruct{}
-	if err := csvreader.New().WithHeader([]string{"NAME", "USERNAME", "ID", "ENABLE"}).UnMarshal(reader, &bean); err != nil {
+	if err := csvreader.New().
+		WithHeader([]string{"NAME", "USERNAME", "ID", "ENABLE"}).
+		UnMarshalBytes([]byte("zhengxin,zhnxin,0,false\nxinzheng,zhnxin,1,true"),
+			&bean); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := json.Marshal(bean)
@@ -53,9 +55,11 @@ func TestLowerName(t *testing.T) {
 }
 
 func TestCustom(t *testing.T) {
-	reader := csv.NewReader(bytes.NewReader([]byte("zhengxin,zhnxin,udp,false\nxinzheng,zhnxin,tcp,true")))
 	bean := []*testStruct{}
-	if err := csvreader.New().WithHeader([]string{"NAME", "USERNAME", "type", "ENABLE"}).UnMarshal(reader, &bean); err != nil {
+	if err := csvreader.New().
+		WithHeader([]string{"NAME", "USERNAME", "type", "ENABLE"}).
+		UnMarshalBytes([]byte("zhengxin,zhnxin,udp,false\nxinzheng,zhnxin,tcp,true"),
+			&bean); err != nil {
 		t.Fatal(err)
 	}
 	b, _ := json.Marshal(bean)

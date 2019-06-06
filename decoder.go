@@ -1,8 +1,8 @@
 package csvreader
 
 import (
+	"bytes"
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -60,7 +60,7 @@ func (d *Decoder) UnMarshal(reader *csv.Reader, bean interface{}) error {
 	value := reflect.ValueOf(bean)
 
 	if value.Kind() != reflect.Ptr {
-		return &json.InvalidUnmarshalError{reflect.TypeOf(bean)}
+		return fmt.Errorf("bean should be ptr")
 	}
 
 	if value.Kind() == reflect.Ptr {
@@ -95,6 +95,11 @@ func (d *Decoder) UnMarshal(reader *csv.Reader, bean interface{}) error {
 	return nil
 }
 
+func (d *Decoder) UnMarshalBytes(body []byte, bean interface{}) error {
+	csvReader := csv.NewReader(bytes.NewReader(body))
+	return d.UnMarshal(csvReader, bean)
+}
+
 func (d *Decoder) UnMarshalFile(path string, bean interface{}) error {
 
 	csvFile, err := os.Open(path)
@@ -127,7 +132,10 @@ func (d *Decoder) unMarshal(row []string, beanT reflect.Type) (beanR reflect.Val
 			fmt.Println(fileT.Name)
 			continue
 		}
-		if tag := fileT.Tag.Get("csv"); tag != "" && tag != "-" {
+		if tag := fileT.Tag.Get("csv"); tag != "" {
+			if tag == "-" {
+				continue
+			}
 			index, ok = d.header[tag]
 		} else {
 			index, ok = d.getIndex(fileT.Name)
@@ -142,7 +150,9 @@ func (d *Decoder) unMarshal(row []string, beanT reflect.Type) (beanR reflect.Val
 				ptv := fileV.Addr()
 				if ptv.CanInterface() {
 					if m, ok := ptv.Interface().(CsvMarshal); ok {
-						m.FromString(value)
+						if err = m.FromString(value); err != nil {
+							return
+						}
 						continue
 					}
 				}
